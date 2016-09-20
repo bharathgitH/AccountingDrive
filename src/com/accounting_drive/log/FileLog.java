@@ -1,7 +1,6 @@
 package com.accounting_drive.log;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Date;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -15,11 +14,19 @@ public class FileLog implements Log {
 	private String parentDirectory;
 	private String subDirectory;
 	private String basePath;
+	private static FileLog instance;
 	
 	{
 		basePath = ConfigLoader.getValueForProperty("LOG_DIR_PATH");
 	}
-
+	
+	private FileLog(){
+		
+	}
+	
+	/**
+	 * Logs the log msges into the specified file
+	 */
 	@Override
 	public void log(Level logType, String className, String methodName, String logInfo) {
 		
@@ -134,6 +141,17 @@ public class FileLog implements Log {
 		logMsg.append("::").append(msg);
 		
 		return logMsg.toString();
+	}
+	
+	/**
+	 * Returns a instance of the FileLog class if it does not already exists
+	 * @return
+	 */
+	private static FileLog getInstance(){
+		if(instance==null){
+			instance = new FileLog();
+		}
+		return instance;
 	}
 
 }
