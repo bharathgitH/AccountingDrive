@@ -1,6 +1,9 @@
 package com.accounting_drive.log;
 
 import java.io.File;
+import java.time.Month;
+import java.time.MonthDay;
+import java.time.Year;
 import java.util.Date;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -33,12 +36,12 @@ public class FileLog implements Log {
 		String parentDir = this.getParentDirectory();
 		String subDir = this.getSubDirectory();
 		
-		StringBuffer filePath = new StringBuffer(basePath).append(parentDir).append("/").append(subDir);
+		StringBuffer filePath = new StringBuffer(basePath).append(parentDir).append("\\").append(subDir);
 		
 		if(filePath!=null && this.checkIfDirectoryExistsOrCreate(filePath.toString())){
-			filePath.append("/").append(this.getLogFileName());
+			filePath.append("\\").append(this.getLogFileName());
 			Logger logger = Logger.getLogger("AccountingDriveLog");
-			FileHandler handler = null;;
+			FileHandler handler = null;
 			try {
 				handler = new FileHandler(filePath.toString(), true);
 			
@@ -48,6 +51,9 @@ public class FileLog implements Log {
 		        String logMsg = this.getMsgToWriteToLogFile(className, methodName, logInfo);
 		        		
 		        logger.log(logType, logMsg);
+		        
+		        handler.flush();
+		        handler.close();
 			} 
 			catch (Exception e) {
 				e.printStackTrace();
@@ -62,12 +68,11 @@ public class FileLog implements Log {
 	 */
 	private String getParentDirectory(){
 		
-		Date currDate = new Date();
-		String currentYear = String.valueOf(currDate.getYear());
-		String currentMonth = String.valueOf(currDate.getMonth());
+		String currentYear = String.valueOf(Year.now().getValue());
+		String currentMonth = String.valueOf(MonthDay.now().getMonthValue());
 		
 		String tempParentDir = currentYear.concat(currentMonth);
-		if(!this.parentDirectory.equals(tempParentDir)){
+		if(this.parentDirectory==null || !this.parentDirectory.equals(tempParentDir)){
 			this.parentDirectory = tempParentDir;
 		}
 			
@@ -80,10 +85,11 @@ public class FileLog implements Log {
 	 */
 	private String getSubDirectory(){
 		
-		String currentDate = String.valueOf(new Date().getDate());
+		StringBuilder currentMonth = new StringBuilder(String.valueOf(MonthDay.now().getDayOfMonth()));
+		currentMonth = currentMonth.length() == 1 ? currentMonth.insert(0, "0") : currentMonth;
 		
-		if(!this.subDirectory.equals(currentDate)){
-			this.subDirectory = currentDate;
+		if(this.subDirectory==null || !this.subDirectory.equals(currentMonth.toString())){
+			this.subDirectory = currentMonth.toString();
 		}
 			
 		return this.subDirectory;
@@ -94,16 +100,12 @@ public class FileLog implements Log {
 	 * @return
 	 */
 	private String getLogFileName(){
-		String logFileName = null;
-		try{
-			Date currentDate = new Date();
-			String baseFileName = ConfigLoader.getValueForProperty("LOG_BASE_FILE_NAME");
-			logFileName = baseFileName.concat(String.valueOf(currentDate.getHours()));
-		}
-		catch(Exception ex){
-			ex.printStackTrace();
-		}
-		return logFileName;
+		Date currentDate = new Date();
+		
+		StringBuilder baseFileName = new StringBuilder(ConfigLoader.getValueForProperty("LOG_BASE_FILE_NAME"));
+		baseFileName.append(currentDate.getHours()).append(".out");
+		
+		return baseFileName.toString();
 	}
 	
 	/**
@@ -147,7 +149,7 @@ public class FileLog implements Log {
 	 * Returns a instance of the FileLog class if it does not already exists
 	 * @return
 	 */
-	private static FileLog getInstance(){
+	public static FileLog getInstance(){
 		if(instance==null){
 			instance = new FileLog();
 		}

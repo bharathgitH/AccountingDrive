@@ -12,16 +12,8 @@ import java.util.Properties;
  */
 public class ConfigLoader {
 	
-	private static Properties properties = new Properties();
-	
-	{
-		try (InputStream input = new FileInputStream("config.properties")){
-			properties.load(input);
-		} 
-		catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
+	private static Properties properties = null;
+
 	
 	/**
 	 * Returns the property value for the given property key 
@@ -29,6 +21,15 @@ public class ConfigLoader {
 	 * @return
 	 */
 	public static String getValueForProperty(String propertyKey){
+		if(properties==null){
+			try (InputStream input = ConfigLoader.class.getResourceAsStream("config.properties")){
+				properties = new Properties();
+				properties.load(input);
+			} 
+			catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
 		return properties.getProperty(propertyKey);
 	}
 	
